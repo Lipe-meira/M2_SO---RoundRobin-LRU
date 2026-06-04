@@ -1,28 +1,40 @@
-with open('arquivo_teste.txt', 'r', encoding='utf-8') as arquivo:
+from collections import deque
+
+with open("arquivo_teste.txt", "r", encoding="utf-8") as arquivo:
     conteudo = arquivo.readlines()
-   
+
     quantum, qntd_frames_ram, penalidade_io = [int(i) for i in conteudo[0].split()]
- 
-  
+
     processos = []
     for linha in conteudo[1:]:
         linha_split = linha.split()
         nome = linha_split[1]
         chegada = int(linha_split[0])
-        paginas = [int(i) for i in linha_split[2].split(',')]
-        processos.append({
-            'nome': nome,
-         'chegada': chegada, 
-         'paginas': paginas, 
-         'indice_atual': 0, 
-         'page_faults': 0,
-         'tempo_conclusao': None, 
-         'estado': 'novo'})
+        paginas = [int(i) for i in linha_split[2].split(",")]
+        processos.append(
+            {
+                "nome": nome,
+                "chegada": chegada,
+                "paginas": paginas,
+                "indice_atual": 0,
+                "page_faults": 0,
+                "tempo_conclusao": None,
+                "estado": "novo",
+            }
+        )
 
-  
-        
-    
-    
+    fila_prontos = deque()
+    tempo = 0
+    # print(fila_prontos, tempo)
 
+    for tempo in range(0, 5):
+        print(tempo, " segundos")
+        for processo in processos:
+            if processo.get("chegada") == tempo and processo.get("estado") == "novo":
+                processo["estado"] = "pronto"
+                fila_prontos.append(processo)
+                print(processo.get("nome"), " chegou")
 
-
+        print("fila de prontos:")
+        for processo in fila_prontos:
+            print(processo.get("nome"))
