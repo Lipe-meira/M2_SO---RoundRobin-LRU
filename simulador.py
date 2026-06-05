@@ -46,6 +46,12 @@ def ler_arquivo(nome_arquivo):
 
     return quantum, qntd_frames_ram, penalidade_io, processos
 
+# RR sem prioridade
+def escolher_processo(fila_prontos):
+    processo_cpu = fila_prontos.popleft()
+    processo_cpu["estado"] = "executando"
+    print(processo_cpu.get("nome"), "começou a executar")
+    return processo_cpu
 
 quantum, qntd_frames_ram, penalidade_io, processos = ler_arquivo(
     "arquivo_teste.txt"
@@ -53,6 +59,7 @@ quantum, qntd_frames_ram, penalidade_io, processos = ler_arquivo(
 fila_prontos = deque()
 tempo = 0
 # print(fila_prontos, tempo)
+print('quantum ', quantum, '\nquantidade Frames ', qntd_frames_ram, '\npenalidade I/O ', penalidade_io, '\n')
 
 processo_cpu = None
 quantum_usado = 0
@@ -62,17 +69,14 @@ while not todos_finalizados(processos):
     adicionar_chegadas(processos, fila_prontos, tempo)
 
     # escalonamento
-    if processo_cpu == None and fila_prontos:
-        processo_cpu = fila_prontos.popleft()
-        processo_cpu["estado"] = "executando"
+    if processo_cpu is None and fila_prontos:
+        processo_cpu = escolher_processo(fila_prontos)
         quantum_usado = 0
-        print(processo_cpu.get("nome"), " começou a executar")
-
     if processo_cpu:
         print(
             processo_cpu["nome"],
             " executou pagina ",
-            processo_cpu["paginas"][processo_cpu["indice_atual"]],
+            processo_cpu["paginas"][processo_cpu["indice_atual"]], '\n'
         )
         processo_cpu["indice_atual"] += 1
         quantum_usado += 1
@@ -83,7 +87,7 @@ while not todos_finalizados(processos):
             print(
                 processo_cpu["nome"],
                 "foi finalizado no tempo",
-                processo_cpu["tempo_conclusao"],
+                processo_cpu["tempo_conclusao"], '\n'
             )
             processo_cpu = None
             quantum_usado = 0
@@ -91,10 +95,11 @@ while not todos_finalizados(processos):
         elif quantum_usado == quantum:
             processo_cpu["estado"] = "pronto"
             fila_prontos.append(processo_cpu)
-            print(processo_cpu["nome"], " foi para a fila de prontos")
+            print(processo_cpu["nome"], " esgotou o quantum, foi para a fila de prontos", '\n')
             processo_cpu = None
             quantum_usado = 0
-
-    print("fila de prontos:")
-    imprimir_fila(fila_prontos)
+    # if fila_prontos:
+    #     print("\nfila de prontos:")
+    #     imprimir_fila(fila_prontos)
+    #     print("\n")
     tempo += 1
