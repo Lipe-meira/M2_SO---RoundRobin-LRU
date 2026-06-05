@@ -46,6 +46,7 @@ def ler_arquivo(nome_arquivo):
 
     return quantum, qntd_frames_ram, penalidade_io, processos
 
+
 # RR sem prioridade
 def escolher_processo(fila_prontos):
     processo_cpu = fila_prontos.popleft()
@@ -53,26 +54,44 @@ def escolher_processo(fila_prontos):
     print(processo_cpu.get("nome"), "começou a executar")
     return processo_cpu
 
-def buscar_pagina_ram(nome_processo, numero_pagina, ram):
-    for frame in ram:                                    #se o frame contem a pagina desejada
-        if frame.get('processo') == nome_processo and frame.get('frame') == numero_pagina:
-            return frame
-    return None 
 
-quantum, qntd_frames_ram, penalidade_io, processos = ler_arquivo(
-    "arquivo_teste.txt"
-)
+def buscar_pagina_ram(nome_processo, numero_pagina, ram):
+    for frame in ram:  # se o frame contem a pagina desejada
+        if (
+            frame.get("processo") == nome_processo
+            and frame.get("pagina") == numero_pagina
+        ):
+            return frame
+    return None
+
+
+quantum, qntd_frames_ram, penalidade_io, processos = ler_arquivo("arquivo_teste.txt")
 fila_prontos = deque()
 tempo = 0
 # print(fila_prontos, tempo)
-print('quantum ', quantum, '\nquantidade Frames ', qntd_frames_ram, '\npenalidade I/O ', penalidade_io, '\n')
+print(
+    "quantum ",
+    quantum,
+    "\nquantidade Frames ",
+    qntd_frames_ram,
+    "\npenalidade I/O ",
+    penalidade_io,
+    "\n",
+)
 
 processo_cpu = None
 quantum_usado = 0
-
 ram = []
 
+ram.append({
+    "processo": "P1",
+    "pagina": 1,
+    "ultimo_acesso": 0,
+    "ordem_entrada": 0
+})
+
 while not todos_finalizados(processos):
+
     print(tempo, " segundos")
     adicionar_chegadas(processos, fila_prontos, tempo)
 
@@ -80,11 +99,32 @@ while not todos_finalizados(processos):
     if processo_cpu is None and fila_prontos:
         processo_cpu = escolher_processo(fila_prontos)
         quantum_usado = 0
+
     if processo_cpu:
+        # pagina atual que vai ser executada, [1,2,3] ex: indice[0] = [1], indice[1] = [2], indice[2] = [3]
+        pagina_desejada = processo_cpu["paginas"][processo_cpu["indice_atual"]]
+        hit = buscar_pagina_ram(processo_cpu["nome"], pagina_desejada, ram)
+
+        # page fault
+        if hit is None:
+            print(
+                "\nO processo",
+                processo_cpu["nome"],
+                "sofreu page fault na pagina ",
+                processo_cpu["paginas"][processo_cpu["indice_atual"]],
+                "\n",
+            )
+            #implementar penalidade depois
+            break
+        else:  # hit  is not None
+            hit["ultimo_acesso"] = tempo
+            print("RAM Hit:", processo_cpu["nome"], "acessou pagina", pagina_desejada)
+
         print(
             processo_cpu["nome"],
             " executou pagina ",
-            processo_cpu["paginas"][processo_cpu["indice_atual"]], '\n'
+            processo_cpu["paginas"][processo_cpu["indice_atual"]],
+            "\n",
         )
         processo_cpu["indice_atual"] += 1
         quantum_usado += 1
@@ -95,7 +135,8 @@ while not todos_finalizados(processos):
             print(
                 processo_cpu["nome"],
                 "foi finalizado no tempo",
-                processo_cpu["tempo_conclusao"], '\n'
+                processo_cpu["tempo_conclusao"],
+                "\n",
             )
             processo_cpu = None
             quantum_usado = 0
@@ -103,11 +144,12 @@ while not todos_finalizados(processos):
         elif quantum_usado == quantum:
             processo_cpu["estado"] = "pronto"
             fila_prontos.append(processo_cpu)
-            print(processo_cpu["nome"], " esgotou o quantum, foi para a fila de prontos", '\n')
+            print(
+                processo_cpu["nome"],
+                " esgotou o quantum, foi para a fila de prontos",
+                "\n",
+            )
             processo_cpu = None
             quantum_usado = 0
-    # if fila_prontos:
-    #     print("\nfila de prontos:")
-    #     imprimir_fila(fila_prontos)
-    #     print("\n")
+
     tempo += 1
