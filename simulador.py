@@ -53,6 +53,12 @@ def escolher_processo(fila_prontos):
     print(processo_cpu.get("nome"), "começou a executar")
     return processo_cpu
 
+def buscar_pagina_ram(nome_processo, numero_pagina, ram):
+    for frame in ram:                                    #se o frame contem a pagina desejada
+        if frame.get('processo') == nome_processo and frame.get('frame') == numero_pagina:
+            return frame
+    return None 
+
 quantum, qntd_frames_ram, penalidade_io, processos = ler_arquivo(
     "arquivo_teste.txt"
 )
@@ -63,6 +69,8 @@ print('quantum ', quantum, '\nquantidade Frames ', qntd_frames_ram, '\npenalidad
 
 processo_cpu = None
 quantum_usado = 0
+
+ram = []
 
 while not todos_finalizados(processos):
     print(tempo, " segundos")
