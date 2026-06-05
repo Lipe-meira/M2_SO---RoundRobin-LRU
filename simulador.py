@@ -65,10 +65,22 @@ def buscar_pagina_ram(nome_processo, numero_pagina, ram):
     return None
 
 
+# LRU ordem_chegada
+def carregar_pagina_ram(ram, nome_processo, numero_pagina, tempo, ordem_chegada):
+    dic = {
+        "processo": nome_processo,
+        "pagina": numero_pagina,
+        "ultimo_acesso": tempo,
+        "ordem_chegada": ordem_chegada,
+    }
+    ram.append(dic)
+    return ordem_chegada + 1
+
+
 quantum, qntd_frames_ram, penalidade_io, processos = ler_arquivo("arquivo_teste.txt")
 fila_prontos = deque()
 tempo = 0
-# print(fila_prontos, tempo)
+
 print(
     "quantum ",
     quantum,
@@ -83,12 +95,8 @@ processo_cpu = None
 quantum_usado = 0
 ram = []
 
-ram.append({
-    "processo": "P1",
-    "pagina": 1,
-    "ultimo_acesso": 0,
-    "ordem_entrada": 0
-})
+# LRU ordem_chegada
+ordem_chegada = 0
 
 while not todos_finalizados(processos):
 
@@ -114,42 +122,49 @@ while not todos_finalizados(processos):
                 processo_cpu["paginas"][processo_cpu["indice_atual"]],
                 "\n",
             )
-            #implementar penalidade depois
-            break
+            processo_cpu["page_faults"] += 1
+            ordem_chegada = carregar_pagina_ram(
+                ram, processo_cpu["nome"], pagina_desejada, tempo, ordem_chegada
+            )
+            processo_cpu["estado"] = "pronto"
+            fila_prontos.append(processo_cpu)
+            processo_cpu = None
+            quantum_usado = 0
+
         else:  # hit  is not None
             hit["ultimo_acesso"] = tempo
             print("RAM Hit:", processo_cpu["nome"], "acessou pagina", pagina_desejada)
 
-        print(
-            processo_cpu["nome"],
-            " executou pagina ",
-            processo_cpu["paginas"][processo_cpu["indice_atual"]],
-            "\n",
-        )
-        processo_cpu["indice_atual"] += 1
-        quantum_usado += 1
-
-        if processo_cpu["indice_atual"] == len(processo_cpu["paginas"]):
-            processo_cpu["estado"] = "finalizado"
-            processo_cpu["tempo_conclusao"] = tempo + 1
             print(
                 processo_cpu["nome"],
-                "foi finalizado no tempo",
-                processo_cpu["tempo_conclusao"],
+                " executou pagina ",
+                processo_cpu["paginas"][processo_cpu["indice_atual"]],
                 "\n",
             )
-            processo_cpu = None
-            quantum_usado = 0
+            processo_cpu["indice_atual"] += 1
+            quantum_usado += 1
 
-        elif quantum_usado == quantum:
-            processo_cpu["estado"] = "pronto"
-            fila_prontos.append(processo_cpu)
-            print(
-                processo_cpu["nome"],
-                " esgotou o quantum, foi para a fila de prontos",
-                "\n",
-            )
-            processo_cpu = None
-            quantum_usado = 0
+            if processo_cpu["indice_atual"] == len(processo_cpu["paginas"]):
+                processo_cpu["estado"] = "finalizado"
+                processo_cpu["tempo_conclusao"] = tempo + 1
+                print(
+                    processo_cpu["nome"],
+                    "foi finalizado no tempo",
+                    processo_cpu["tempo_conclusao"],
+                    "\n",
+                )
+                processo_cpu = None
+                quantum_usado = 0
+
+            elif quantum_usado == quantum:
+                processo_cpu["estado"] = "pronto"
+                fila_prontos.append(processo_cpu)
+                print(
+                    processo_cpu["nome"],
+                    " esgotou o quantum, foi para a fila de prontos",
+                    "\n",
+                )
+                processo_cpu = None
+                quantum_usado = 0
 
     tempo += 1
