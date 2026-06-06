@@ -33,7 +33,23 @@ def ler_arquivo(nome_arquivo):
     with open(nome_arquivo, "r", encoding="utf-8") as arquivo:
         conteudo = arquivo.readlines()
         processos = []
+        nomes_usados = []
+        if len(conteudo) == 0:
+            raise ValueError("O arquivo de entrada esta vazio.")
+
+        primeira_linha = conteudo[0].split()
+        if len(primeira_linha) != 3:
+            raise ValueError("A primeira linha deve ter 3 numeros.")
+
         quantum, qntd_frames_ram, penalidade_io = [int(i) for i in conteudo[0].split()]
+
+        if quantum <= 0:
+            raise ValueError("O quantum deve ser maior que zero.")
+        if qntd_frames_ram <= 0:
+            raise ValueError("A quantidade de frames deve ser maior que zero.")
+        if penalidade_io < 0:
+            raise ValueError("A penalidade de I/O nao pode ser negativa.")
+
 
         for linha in conteudo[1:]:
             linha_split = linha.split()
@@ -51,6 +67,15 @@ def ler_arquivo(nome_arquivo):
                     "estado": "novo",
                 }
             )
+            if chegada < 0:
+                raise ValueError("Tempo de chegada nao pode ser negativo.")
+            if nome in nomes_usados:
+                raise ValueError("Processo duplicado: " + nome)
+            nomes_usados.append(nome)
+
+        if len(processos) == 0:
+            raise ValueError("O arquivo deve conter pelo menos um processo.")
+
     return quantum, qntd_frames_ram, penalidade_io, processos
 
 
@@ -109,7 +134,15 @@ def carregar_pagina_ram(ram, nome_processo, numero_pagina, tempo, ordem_chegada,
     return ordem_chegada + 1
 
 
-quantum, qntd_frames_ram, penalidade_io, processos = ler_arquivo("arquivo_teste.txt")
+try:
+    quantum, qntd_frames_ram, penalidade_io, processos = ler_arquivo("arquivo_teste.txt")
+except ValueError as erro:
+    print("Erro no arquivo:", erro)
+    exit()
+except FileNotFoundError:
+    print("Erro: arquivo_teste.txt nao encontrado.")
+    exit()
+
 fila_prontos = deque()
 tempo = 0
 bloqueados = []
