@@ -20,6 +20,14 @@ def adicionar_chegadas(processos, fila_prontos, tempo):
             fila_prontos.append(processo)
             print(processo.get("nome"), " chegou")
 
+def atualizar_bloqueados(bloqueados, fila_prontos, tempo):
+    for item in bloqueados[:]:
+        if item.get("tempo_retorno") == tempo:
+            processo = item.get("processo")
+            processo["estado"] = "pronto"
+            fila_prontos.append(processo)
+            bloqueados.remove(item)
+            print(processo["nome"], "retornou I/O")
 
 def ler_arquivo(nome_arquivo):
     with open(nome_arquivo, "r", encoding="utf-8") as arquivo:
@@ -80,6 +88,7 @@ def carregar_pagina_ram(ram, nome_processo, numero_pagina, tempo, ordem_chegada)
 quantum, qntd_frames_ram, penalidade_io, processos = ler_arquivo("arquivo_teste.txt")
 fila_prontos = deque()
 tempo = 0
+bloqueados = []
 
 print(
     "quantum ",
@@ -102,6 +111,7 @@ while not todos_finalizados(processos):
 
     print(tempo, " segundos")
     adicionar_chegadas(processos, fila_prontos, tempo)
+    atualizar_bloqueados(bloqueados, fila_prontos, tempo)
 
     # escalonamento
     if processo_cpu is None and fila_prontos:
