@@ -72,15 +72,40 @@ def buscar_pagina_ram(nome_processo, numero_pagina, ram):
             return frame
     return None
 
+def escolher_indice_lru(ram):
+    indice_lru = 0
 
+    for i in range(1, len(ram)):
+        if ram[i].get("ultimo_acesso") < ram[indice_lru].get("ultimo_acesso"):
+            indice_lru = i
+
+        elif ram[i].get("ultimo_acesso") == ram[indice_lru].get("ultimo_acesso"):
+            if ram[i].get("ordem_chegada") < ram[indice_lru].get("ordem_chegada"):
+                indice_lru = i
+
+    return indice_lru
+
+
+    
 # LRU ordem_chegada
-def carregar_pagina_ram(ram, nome_processo, numero_pagina, tempo, ordem_chegada):
+def carregar_pagina_ram(ram, nome_processo, numero_pagina, tempo, ordem_chegada, qntd_frames_ram):
     dic = {
         "processo": nome_processo,
         "pagina": numero_pagina,
         "ultimo_acesso": tempo,
         "ordem_chegada": ordem_chegada,
     }
+    
+    if len(ram) >= qntd_frames_ram:
+        indice_lru = escolher_indice_lru(ram)
+        pagina_removida = ram.pop(indice_lru)
+        print(
+            "LRU removeu a pagina",
+            pagina_removida["pagina"],
+            "do processo",
+            pagina_removida["processo"]
+        )
+
     ram.append(dic)
     return ordem_chegada + 1
 
@@ -134,7 +159,7 @@ while not todos_finalizados(processos):
             )
             processo_cpu["page_faults"] += 1
             ordem_chegada = carregar_pagina_ram(
-                ram, processo_cpu["nome"], pagina_desejada, tempo, ordem_chegada
+                ram, processo_cpu["nome"], pagina_desejada, tempo, ordem_chegada, qntd_frames_ram
             )
             processo_cpu["estado"] = "bloqueado"
             bloqueados.append({"processo":processo_cpu, "tempo_retorno":tempo + penalidade_io})
