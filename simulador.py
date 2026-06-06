@@ -136,8 +136,8 @@ while not todos_finalizados(processos):
             ordem_chegada = carregar_pagina_ram(
                 ram, processo_cpu["nome"], pagina_desejada, tempo, ordem_chegada
             )
-            processo_cpu["estado"] = "pronto"
-            fila_prontos.append(processo_cpu)
+            processo_cpu["estado"] = "bloqueado"
+            bloqueados.append({"processo":processo_cpu, "tempo_retorno":tempo + penalidade_io})
             processo_cpu = None
             quantum_usado = 0
 
