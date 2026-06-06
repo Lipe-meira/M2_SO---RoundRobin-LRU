@@ -95,7 +95,7 @@ def carregar_pagina_ram(ram, nome_processo, numero_pagina, tempo, ordem_chegada,
         "ultimo_acesso": tempo,
         "ordem_chegada": ordem_chegada,
     }
-    
+
     if len(ram) >= qntd_frames_ram:
         indice_lru = escolher_indice_lru(ram)
         pagina_removida = ram.pop(indice_lru)
@@ -203,3 +203,21 @@ while not todos_finalizados(processos):
                 quantum_usado = 0
 
     tempo += 1
+
+print("=== RESULTADOS FINAIS ===")
+
+for processo in processos:
+    tempo_retorno = processo["tempo_conclusao"] - processo["chegada"]
+    print(processo["nome"],
+          " tempo de retorno = ", 
+          tempo_retorno,
+          ", page faults = ",
+          processo["page_faults"])
+    
+print("\nEstado final da RAM: ")
+for i, frame in enumerate(ram):
+    print(
+        "Frame", i,
+        ": ", frame["processo"],
+        "pagina ", frame["pagina"]
+    )
