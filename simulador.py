@@ -51,7 +51,6 @@ def ler_arquivo(nome_arquivo):
                     "estado": "novo",
                 }
             )
-
     return quantum, qntd_frames_ram, penalidade_io, processos
 
 
@@ -161,8 +160,12 @@ while not todos_finalizados(processos):
             ordem_chegada = carregar_pagina_ram(
                 ram, processo_cpu["nome"], pagina_desejada, tempo, ordem_chegada, qntd_frames_ram
             )
-            processo_cpu["estado"] = "bloqueado"
-            bloqueados.append({"processo":processo_cpu, "tempo_retorno":tempo + penalidade_io})
+            if penalidade_io == 0:
+                processo_cpu["estado"] = "pronto"
+                fila_prontos.append(processo_cpu)
+            else:
+                processo_cpu["estado"] = "bloqueado"
+                bloqueados.append({"processo": processo_cpu, "tempo_retorno": tempo + penalidade_io})
             processo_cpu = None
             quantum_usado = 0
 
